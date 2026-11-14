@@ -23,7 +23,6 @@ services:
       - nomad-data:/nomad/data
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - ../nomad/nginx.nomad.hcl:/etc/nomad.d/nginx.nomad.hcl:ro
     depends_on:
       - consul
     restart: unless-stopped
