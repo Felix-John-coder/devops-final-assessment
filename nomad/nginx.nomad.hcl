@@ -18,6 +18,7 @@ job "nginx-app" {
       config {
         image = "ghcr.io/felix-john-coder/devops-final-assessment:latest"
         ports = ["http"]
+        force_pull = true
       }
 
       resources {
