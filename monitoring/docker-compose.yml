@@ -1,0 +1,44 @@
+
+services:
+  consul:
+    image: hashicorp/consul:1.21
+    container_name: consul
+    command: agent -dev -client=0.0.0.0 -ui
+    ports:
+      - "8500:8500"
+    volumes:
+      - consul-data:/consul/data
+    restart: unless-stopped
+
+  nomad:
+    image: hashicorp/nomad:2.1.1
+    container_name: nomad
+    privileged: true
+    cgroup: host
+    command: agent -dev -bind=0.0.0.0 -config=/etc/nomad.d/nomad.hcl
+    ports:
+      - "4646:4646"
+    volumes:
+      - ./nomad.hcl:/etc/nomad.d/nomad.hcl:ro
+      - nomad-data:/nomad/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    depends_on:
+      - consul
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.5.0
+    container_name: loki
+    command: -config.file=/etc/loki/config.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+
+volumes:
+  consul-data:
+  nomad-data:
+  loki-data:
