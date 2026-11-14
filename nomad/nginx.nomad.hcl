@@ -8,7 +8,7 @@ job "nginx-app" {
 
     network {
       port "http" {
-        from = 8080
+        static = 8080
         to = 8080
       }
     }
