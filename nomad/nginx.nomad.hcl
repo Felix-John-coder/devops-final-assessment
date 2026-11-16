@@ -36,6 +36,12 @@ job "nginx-app" {
         image        = "ghcr.io/felix-john-coder/devops-final-assessment:latest"
         network_mode = "host"
         force_pull   = true
+
+        labels {
+          logging = "promtail"
+          service = "nginx service"
+          job = "nginx-app"
+        }
       }
 
       resources {
