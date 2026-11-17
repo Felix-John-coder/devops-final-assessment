@@ -51,18 +51,8 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 | Docker | 29.2.1 |
 | Docker Compose | 5.0.2 |
 | Nomad | 2.1.1 |
-| Consul | [Insert installed version] |
-| ShellCheck | [Insert installed version] |
+| Consul | [v1.21.5] |
 
-Verify installations:
-
-```bash
-docker --version
-docker compose version
-nomad version
-consul version
-
-```
 
 ---
 
@@ -96,17 +86,15 @@ Open Grafana at `http://localhost:3000` and navigate to **Explore → Loki** to 
 
 Created and maintained the assessment repository using incremental Git commits and conventional commit messages.
 
-The work was developed on a feature branch and merged into `main` through a self-reviewed pull request. The final project state was tagged as `v1.0.0`.
-
 **Conventional commit examples:**
 
 ```text
-feat: add nginx application container
-feat: implement system information script
-feat: add nomad deployment configuration
-ci: implement github actions pipeline
-fix: correct consul health check networking
-docs: document deployment and monitoring
+feat: software built 
+feat: script updated/added
+feat: nomad infra added
+ci: ci workflow added
+fix: workflow fixed
+docs: docs/Readme updated
 ```
 
 **Verify repository history and release:**
@@ -117,11 +105,6 @@ git branch -a
 git tag --list
 ```
 
-Final release tag:
-
-```text
-v1.0.0
-```
 
 Pull request: [Insert merged pull request URL]
 
@@ -148,7 +131,7 @@ The health-check script accepts a URL argument and defaults to `http://localhost
 ```
 
 
-Both scripts are committed with executable permissions.
+Both scripts are committed and run in the pipeline with executable permissions.
 
 ---
 
