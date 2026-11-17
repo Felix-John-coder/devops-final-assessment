@@ -35,7 +35,7 @@ job "nginx-app" {
       config {
         image        = "ghcr.io/felix-john-coder/devops-final-assessment:latest"
         network_mode = "host"
-        force_pull   = true
+        force_pull   = false
 
         labels {
           logging = "promtail"

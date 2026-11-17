@@ -66,18 +66,7 @@ services:
       - loki
     restart: unless-stopped 
     
-  nginx-proxy:
-    build: 
-      context: ../reverse-proxy
-      dockerfile: Dockerfile                         
-    image: nginx-tls-proxy:local      
-    container_name: nginx-proxy
-    network_mode: host              
-    restart: unless-stopped
-    labels:                           
-      logging: "promtail"
-      service: "nginx-proxy"
-      job: "nginx-proxy"
+ 
 volumes:
   consul-data:
   nomad-data:

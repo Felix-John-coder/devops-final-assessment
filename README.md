@@ -1,6 +1,6 @@
 # DevOps Intern Final Assessment
 
-[![CI Status](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/ci.yaml/badge.svg)](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/ci.yaml)
+[![CI Status](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml/badge.svg](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/ci.yaml)
 
 **Name:** Felix Aghedo  
 **Submission date:** 17 December 2026  
@@ -59,7 +59,7 @@ docker --version
 docker compose version
 nomad version
 consul version
-shellcheck --version
+
 ```
 
 ---
@@ -76,7 +76,7 @@ cd monitoring && docker compose up -d && cd ..
 
 docker pull ghcr.io/felix-john-coder/devops-final-assessment:latest
 
-docker exec -i nomad nomad job run -var="image_tag=latest" - < nomad/nginx-app.nomad.hcl
+docker exec -i nomad nomad job run  - < nomad/nginx-app.nomad.hcl
 
 docker build -t nginx-tls-proxy:local ./reverse-proxy
 
@@ -145,17 +145,6 @@ The health-check script accepts a URL argument and defaults to `http://localhost
 ./scripts/healthcheck.sh http://localhost:8080/healthz
 ```
 
-**Validate with ShellCheck:**
-
-```bash
-shellcheck scripts/*.sh
-```
-
-**Verify executable permissions:**
-
-```bash
-git ls-files --stage scripts/
-```
 
 Both scripts are committed with executable permissions.
 
@@ -187,7 +176,7 @@ docker build \
 **Inspect image size:**
 
 ```bash
-docker images devops-intern-final:local
+docker images ghcr.io/felix-john-coder/devops-final-assessment:latest
 ```
 
 **Run the container:**
@@ -196,7 +185,7 @@ docker images devops-intern-final:local
 docker run -d \
   --name devops-intern-final \
   -p 8080:8080 \
-  devops-intern-final:local
+  ghcr.io/felix-john-coder/devops-final-assessment:latest
 ```
 
 **Test the application:**
@@ -240,7 +229,7 @@ The publishing workflow uses `GITHUB_TOKEN` with restricted permissions and publ
 ghcr.io/felix-john-coder/devops-final-assessment
 ```
 
-![GitHub Actions CI Result](docs/screenshots/ci-run.png)
+![GitHub Actions CI Result](docs/ci-run.png)
 
 The CI status badge at the top of this README links to the workflow.
 
