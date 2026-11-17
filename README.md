@@ -1,4 +1,4 @@
-# DevOps Intern Final Assessment
+# DevOps Final Assessment
 
 
 [![CI Status](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml)
