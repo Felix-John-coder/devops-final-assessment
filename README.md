@@ -51,7 +51,7 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 | Docker | 29.2.1 |
 | Docker Compose | 5.0.2 |
 | Nomad | 2.1.1 |
-| Consul | [v1.21.5] |
+| Consul | v1.21.5 |
 
 
 ---
@@ -149,14 +149,6 @@ Implementation includes:
 - `BUILD_SHA` build argument exposed through the application response.
 - Final image designed to remain below 60 MB.
 
-**Build the image:**
-
-```bash
-docker build \
-  --build-arg BUILD_SHA=$(git rev-parse HEAD) \
-  -t devops-intern-final:local \
-  ./app
-```
 
 **Inspect image size:**
 

@@ -2,9 +2,8 @@ FROM nginx:stable-alpine
 
 # Copy source code
 RUN rm -rf /usr/share/nginx/html/*
-COPY ./ /usr/share/nginx/html
+COPY index.html /usr/share/nginx/html
 
-RUN apk update && apk upgrade --no-cache
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf 
 
