@@ -8,10 +8,10 @@ The pipeline collects NGINX access logs from Nomad-managed Docker containers, fo
 
 | File | Purpose |
 |---|---|
-| `monitoring/docker-compose.yaml` | Starts Loki, Promtail, and Grafana on a shared Docker network |
-| `monitoring/loki-config.yaml` | Configures the Loki log storage service |
+| `monitoring/docker-compose.yml` | Starts Loki, Promtail, and Grafana on a shared Docker network |
+| `monitoring/loki-config.yml` | Configures the Loki log storage service |
 | `monitoring/promtail-config.yaml` | Configures Docker log discovery, labels, and forwarding to Loki |
-| `monitoring/grafana-datasource.yaml` | Automatically provisions Loki as a Grafana data source |
+| `monitoring/grafana.yml` | Automatically provisions Loki as a Grafana data source |
 
 **Log pipeline:**
 
@@ -40,14 +40,13 @@ config {
 Apply the updated job from the repository root, adjusting the file path if necessary:
 
 ```bash
-nomad job run nginx.nomad.hcl
+docker exec -i nomad nomad job run - < nomad/nginx.nomad.hcl
 ```
 
 Nomad updates the existing job according to its deployment configuration. Check the deployment and allocation status:
 
 ```bash
-nomad job status nginx-app
-nomad alloc status <allocation-id>
+docker exec -i nomad nomad job status nginx-appp
 ```
 
 ## 3. Starting the Monitoring Stack
@@ -149,14 +148,4 @@ The screenshot should show the executed query and actual returned log entries.
 | `curl localhost:8080` failed inside the Consul container | `localhost` refers to the current container, not the application container or Docker host | Tested using the Docker network gateway `172.22.0.1:8080` |
 | GHCR image pull failed with IPv6 `network is unreachable` | WSL did not have a working IPv6 route to the registry | Used `force_pull = false` to reuse the locally cached image where appropriate |
 | Grafana returned no logs | Incorrect label selector, Promtail discovery issue, or missing test traffic | Verified Docker labels, Promtail logs, Loki readiness, and the selected Grafana time range |
-
-## 8. Component Lifecycle and Production Considerations
-
-Promtail reached end of life on March 2, 2026, and is no longer maintained. This project documents the Promtail-based implementation used for the assessment.
-
-For future production deployments, migrate log collection to **Grafana Alloy**, Grafana's supported telemetry collector.
-
-Official migration documentation:
-
-https://grafana.com/docs/alloy/latest/set-up/migrate/from-promtail/
 
