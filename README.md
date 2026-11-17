@@ -149,26 +149,36 @@ Implementation includes:
 - `BUILD_SHA` build argument exposed through the application response.
 - Final image designed to remain below 60 MB.
 
+
+ ### Deployment Reliability
+
+The NGINX application runs as a Nomad service with deployment and recovery policies:
+
+- **Rolling updates:** Controls deployment concurrency and monitors allocation health.
+- **Restart and rescheduling:** Automatically retries failed tasks and reschedules unsuccessful allocations.
+- **Consul health monitoring:** Uses HTTP health checks on `/healthz` to monitor application availability.
+
+These policies help maintain application availability and recover from task failures.
+
 **Build the image:**
 
 ```bash
 docker build \
-  --build-arg BUILD_SHA=$(git rev-parse HEAD) \
-  -t devops-intern-final:local \
+  -t devops-final:local \
   ./app
 ```
 
 **Inspect image size:**
 
 ```bash
-docker images ghcr.io/felix-john-coder/devops-final-assessment:latest
+docker images devops-final:local
 ```
 
 **Run the container:**
 
 ```bash
 docker run -d \
-  --name devops-intern-final \
+  --name devops-final \
   -p 8080:8080 \
   ghcr.io/felix-john-coder/devops-final-assessment:latest
 ```
@@ -189,7 +199,7 @@ Content-Type: text/plain
 Content-Length: 2
 ```
 
-Image size: [Insert actual `docker images` output].
+Image size: `20.7MB`
 
 ---
 
@@ -237,26 +247,25 @@ The job includes:
 **Validate the job:**
 
 ```bash
-nomad job validate -var="image_tag=latest" nomad/nginx-app.nomad.hcl
+docker exec -i nomad nomad job validate - <  ../nomad/nginx.nomad.hcl
 ```
 
 **Plan the deployment:**
 
 ```bash
-nomad job plan -var="image_tag=latest" nomad/nginx-app.nomad.hcl
+docker exec -i nomad nomad job plan - <  ../nomad/nginx.nomad.hcl
 ```
 
 **Deploy:**
 
 ```bash
-nomad job run -var="image_tag=latest" nomad/nginx-app.nomad.hcl
+docker exec -i nomad nomad job run - <  ../nomad/nginx.nomad.hcl
 ```
 
 **Inspect deployment status:**
 
 ```bash
-nomad job status nginx-app
-nomad alloc status <ALLOCATION_ID>
+docker exec -it nomad nomad job status nginx-app
 ```
 
 The application registers with Consul, which checks `/healthz` every 10 seconds with a 2-second timeout.
@@ -267,7 +276,7 @@ The application registers with Consul, which checks `/healthz` every 10 seconds 
 curl -s http://localhost:8500/v1/health/checks/nginx-service
 ```
 
-### TLS reverse proxy
+## TLS reverse proxy
 
 An additional NGINX TLS reverse proxy was configured under `reverse-proxy/`.
 
@@ -289,7 +298,15 @@ curl -ik https://localhost:8443/healthz
 
 The `-k` option allows testing with the assessment's self-signed certificate.
 
-![Consul Health Check](docs/screenshots/consul-healthy.png)
+### Deployment Reliability
+
+The TLS reverse proxy uses Nomad deployment and recovery policies to improve availability:
+
+- **Rolling updates:** One allocation at a time, with automatic rollback on unsuccessful deployments.
+- **Restart and rescheduling:** Retries failed tasks and reschedules allocations using exponential backoff.
+- **HTTPS health monitoring:** Consul checks `/healthz` every 10 seconds with a 2-second timeout.
+
+These configurations support controlled deployments and automated service recovery.
 
 ---
 
@@ -346,7 +363,7 @@ curl http://localhost:8080/does-not-exist
 
 This query extracts the HTTP status from NGINX access logs and filters unsuccessful responses.
 
-![Grafana Explore](docs/screenshots/grafana-explore.png)
+![Grafana Explore](docs/grafana-explore.png)
 
 Additional configuration, queries, observed results, and troubleshooting notes are documented in `monitoring/loki_setup.md`.
 
@@ -356,7 +373,8 @@ Additional configuration, queries, observed results, and troubleshooting notes a
 
 | Failure | Cause and resolution |
 |---|---|
-| Consul returned `connection refused` for `172.22.0.4:8080` | The application used host networking. Configured the Consul service address to use the Docker gateway, `172.22.0.1`. |
+| Consul returned `connection refused` for `172.22.0.4:8080` | The application used host networking. Configured the Consul service address to use the Docker gateway, `host.docker.internal`. |
+|`Host address via host.docker.internal`: Consul reaches the host through this name, which depends on the `extra_hosts` entry in the compose file. With more time I would run Consul and Nomad on the host or use Consul DNS, so no host address is needed.|
 | `localhost:8080` failed inside the Consul container | Container localhost refers to itself. Used the Docker gateway to reach the host application. |
 | Nomad failed to pull an image because IPv6 networking was unavailable | Set `force_pull = false` to reuse the image already available in the Docker daemon. |
 | Loki rejected old log entries with HTTP 400 | Old buffered entries were outside Loki's accepted timestamp window. Generated fresh requests and queried recent logs. |
@@ -369,7 +387,6 @@ Additional configuration, queries, observed results, and troubleshooting notes a
 - **Hardcoded Docker gateway:** The gateway address can change when the Docker network is recreated. I would use a more stable service-discovery and networking design.
 - **Self-signed TLS certificate:** Suitable for local assessment, not public production traffic. I would use a trusted CA and automated renewal.
 - **Default monitoring credentials:** Grafana and Loki require stronger authentication and access controls before production use.
-- **Image tagging:** `latest` is convenient for testing but not reproducible. I would use immutable commit-SHA tags for deployments.
 - **Manual deployment:** CI publishes the image, but deployment to Nomad is not fully automated. I would introduce an authenticated deployment stage with approval and rollback.
 - **Local environment:** The assessment runs on a single WSL2 Docker environment, not a production multi-node infrastructure.
 

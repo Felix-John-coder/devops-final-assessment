@@ -5,6 +5,31 @@ job "nginx-app" {
   group "nginx" {
     count  = 1
     shutdown_delay = "30s"
+    # Rolling deployment configuration
+    update {
+      max_parallel      = 1
+      min_healthy_time  = "10s"
+      healthy_deadline  = "2m"
+      auto_revert       = true
+    }
+
+    # Restart failed tasks before rescheduling
+    restart {
+      attempts = 3
+      interval = "30m"
+      delay    = "15s"
+      mode     = "fail"
+    }
+
+    # Reschedule allocations after restart attempts are exhausted
+    reschedule {
+      attempts       = 3
+      interval       = "1h"
+      delay          = "30s"
+      delay_function = "exponential"
+      max_delay      = "5m"
+      unlimited      = false
+    }
 
     network {
       mode = "host"
@@ -18,7 +43,7 @@ job "nginx-app" {
       name     = "nginx-service"
       port     = "http"
       provider = "consul"
-      address = "172.22.0.1"
+      address = "host.docker.internal"
 
       check {
         name     = "healthcheck"

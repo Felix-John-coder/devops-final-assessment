@@ -6,6 +6,32 @@ job "nginx-proxy" {
     count          = 1
     shutdown_delay = "30s"
 
+    # Rolling deployment configuration
+    update {
+      max_parallel      = 1
+      min_healthy_time  = "10s"
+      healthy_deadline  = "2m"
+      auto_revert       = true
+    }
+
+    # Restart failed tasks before rescheduling
+    restart {
+      attempts = 3
+      interval = "30m"
+      delay    = "15s"
+      mode     = "fail"
+    }
+
+    # Reschedule allocations after restart attempts are exhausted
+    reschedule {
+      attempts       = 3
+      interval       = "1h"
+      delay          = "30s"
+      delay_function = "exponential"
+      max_delay      = "5m"
+      unlimited      = false
+    }
+
     network {
       mode = "host"
 
@@ -15,20 +41,18 @@ job "nginx-proxy" {
     }
 
     service {
-      name     = "nginx-proxy"
-      port     = "https"
+      name  = "nginx-proxy"
+      port   = "https"
       provider = "consul"
-
-     
-      address = "172.22.0.1"
+      address = "host.docker.internal"
 
       check {
-        name            = "https-healthcheck"
-        type            = "http"
-        protocol        = "https"
-        tls_skip_verify = true      # self-signed cert, so skip CA validation
-        path            = "/healthz"    
-        interval        = "10s"
+        name        = "https-healthcheck"
+        type       = "http"
+        protocol      = "https"
+        tls_skip_verify = true
+        path            = "/healthz"
+        interval     = "10s"
         timeout         = "2s"
       }
     }
@@ -37,9 +61,9 @@ job "nginx-proxy" {
       driver = "docker"
 
       config {
-        image        = "nginx-tls-proxy:local"   
+        image        = "nginx-tls-proxy:local"
         network_mode = "host"
-        force_pull   = false                     
+        force_pull   = false
 
         labels = {
           logging = "promtail"

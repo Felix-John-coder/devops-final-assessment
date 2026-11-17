@@ -1,27 +1,34 @@
 # Loki Log Pipeline Setup
 
-Stack: **Loki** (log storage) + **Promtail** (log shipper) + **Grafana** (query UI),
-shipping NGINX logs from a Nomad-managed Docker container.
+**Stack:** Loki (log storage) + Promtail (log collection) + Grafana (log visualization and querying).
 
-## 1. Files
+The pipeline collects NGINX access logs from Nomad-managed Docker containers, forwards them to Loki, and makes them searchable through Grafana.
+
+## 1. Architecture and Configuration Files
 
 | File | Purpose |
 |---|---|
-| `monitoring/docker-compose.yaml` | Starts Loki, Promtail, Grafana on one shared network |
-| `monitoring/loki-config.yaml` | Loki server config (committed, mounted into the container) |
-| `monitoring/promtail-config.yaml` | Discovers containers, attaches labels, pushes to Loki |
-| `monitoring/grafana-datasource.yaml` | Auto-registers Loki as a Grafana data source |
+| `monitoring/docker-compose.yaml` | Starts Loki, Promtail, and Grafana on a shared Docker network |
+| `monitoring/loki-config.yaml` | Configures the Loki log storage service |
+| `monitoring/promtail-config.yaml` | Configures Docker log discovery, labels, and forwarding to Loki |
+| `monitoring/grafana-datasource.yaml` | Automatically provisions Loki as a Grafana data source |
 
-## 2. Required change to the Nomad job
+**Log pipeline:**
 
-Promtail only ships containers that carry the Docker label `logging=promtail`.
-Add `labels` to the task config in `nginx.nomad.hcl`:
+`Nomad Docker Container → Promtail → Loki → Grafana`
+
+## 2. Nomad Docker Logging Configuration
+
+Promtail discovers containers carrying the Docker label `logging=promtail`.
+
+The following labels are configured in the NGINX application task:
 
 ```hcl
 config {
   image        = "ghcr.io/felix-john-coder/devops-final-assessment:latest"
   network_mode = "host"
   force_pull   = false
+
   labels = {
     logging = "promtail"
     job     = "nginx-app"
@@ -30,59 +37,126 @@ config {
 }
 ```
 
-Then redeploy: `nomad job stop nginx-app && nomad job run nginx.nomad.hcl`.
+Apply the updated job from the repository root, adjusting the file path if necessary:
 
-## 3. How the stack was started
-
-```sh
-cd monitoring
-docker compose up -d
-docker compose ps          # all three should be "running"
+```bash
+nomad job run nginx.nomad.hcl
 ```
 
-- Loki ready check: `curl http://localhost:3100/ready` (returns `ready`)
-- Grafana: http://localhost:3000 (admin / admin)
+Nomad updates the existing job according to its deployment configuration. Check the deployment and allocation status:
 
-## 4. Label set
+```bash
+nomad job status nginx-app
+nomad alloc status <allocation-id>
+```
+
+## 3. Starting the Monitoring Stack
+
+Start the monitoring services:
+
+```bash
+cd monitoring
+docker compose up -d
+```
+
+Verify the containers:
+
+```bash
+docker compose ps
+```
+
+Check Loki readiness:
+
+```bash
+curl http://localhost:3100/ready
+```
+
+Expected response:
+
+```text
+ready
+```
+
+Open Grafana:
+
+`http://localhost:3000`
+
+The initial credentials may be `admin/admin`, depending on the Compose configuration. Change the default password before using the stack beyond local assessment testing.
+
+## 4. Log Labels
+
+Promtail attaches labels to make logs searchable and easier to isolate.
 
 | Label | Source | Example |
 |---|---|---|
-| `job` | Docker label `job` (set in Nomad job) | `nginx-app` |
-| `service` | Docker label `service` | `nginx-service` |
-| `container` | Docker container name | `nginx-container-<alloc-id>` |
-| `task` | Parsed from container name | `nginx-container` |
-| `nomad_alloc_id` | Parsed from container name (Nomad names containers `<task>-<alloc-uuid>`) | `3f1a...` |
-| `app` | Static label in Promtail pipeline | `nginx` |
+| `job` | Docker label | `nginx-app` |
+| `service` | Docker label | `nginx-service` |
+| `container` | Docker container name | Nomad-managed container name |
+| `task` | Parsed from container name | `nginx-app` |
+| `nomad_alloc_id` | Parsed from container name | Allocation UUID |
+| `app` | Static Promtail pipeline label | `nginx` |
 
-HTTP status is not a label on purpose (high cardinality). It is extracted at query time.
+HTTP status codes are extracted at query time rather than stored as stream labels. This avoids creating unnecessary label cardinality.
 
-## 5. Generating test traffic
+## 5. Generating Test Traffic
 
-```sh
-curl -i http://localhost:8080/healthz          # 200
-curl -i http://localhost:8080/does-not-exist   # 404 (deliberate)
-curl -i http://localhost:8080/missing-page     # 404 (deliberate)
+Generate successful and unsuccessful HTTP requests to produce sample access logs:
+
+```bash
+# Successful request
+curl -i http://localhost:8080/healthz
+
+# Deliberate 404 responses
+curl -i http://localhost:8080/does-not-exist
+curl -i http://localhost:8080/missing-page
 ```
 
-## 6. LogQL queries and results
+Verify that these requests appear in the NGINX access logs and are subsequently collected by Promtail.
 
-> Fill in the Result column from your own Grafana Explore run, then add the screenshot.
+## 6. Querying Logs in Grafana
 
-| # | Query | Purpose | Result |
-|---|---|---|---|
-| 1 | `{job="nginx-app"}` | All nginx logs arrive | _(paste what you saw)_ |
-| 2 | `{job="nginx-app"} \|= "GET"` | Only access-log lines | _(paste)_ |
-| 3 | ``{job="nginx-app"} \| pattern `<ip> - <_> [<_>] "<method> <uri> <_>" <status> <size> "<_>" "<agent>"` \| status != "200"`` | Non-200 requests | _(expect the 404 lines for `/does-not-exist`)_ |
-| 4 | `{job="nginx-app", nomad_alloc_id="<id>"}` | Isolate one allocation | _(paste)_ |
-| 5 | `sum by (status) (count_over_time({job="nginx-app"} \| pattern `<_> - <_> [<_>] "<_> <_> <_>" <status> <_> "<_>" "<_>"` [5m]))` | Requests per status code | _(paste)_ |
+Navigate to:
 
-Screenshot: `docs/screenshots/grafana-explore.png`
+**Grafana → Explore → Loki → Code**
 
-## 7. Problems hit and fixes
+Select a suitable time range, such as **Last 15 minutes**, and execute the following LogQL queries.
 
-| Problem | Cause | Fix |
+| # | LogQL query | Purpose |
 |---|---|---|
-| Nomad showed the allocation unhealthy; Consul check error `dial tcp 172.22.0.4:8080: connection refused` | nginx runs with `network_mode = "host"`, but Nomad registered `172.22.0.4` (not the host), where nothing listens on 8080 | Added `address = "172.22.0.1"` (Docker network gateway = host) to the `service` block |
-| `curl localhost:8080` failed inside the Consul container | `localhost` inside a container is the container itself | Tested the gateway IP `172.22.0.1:8080` instead (returned 200) |
-| Image pull failed: `dial tcp [2606:...]:443: network is unreachable` | Docker tried IPv6 to ghcr.io and WSL has no IPv6 route | Set `force_pull = false` to use the local image, or disabled IPv6 via sysctl |
-| _(add any problems from the Loki setup here)_ | | |
+| 1 | `{job="nginx-app"}` | Retrieve all application logs |
+| 2 | `{job="nginx-app"} |= "GET"` | Filter GET requests |
+| 3 | `{job="nginx-app"} \| pattern \`<ip> - <_> [<_>] "<method> <uri> <_>" <status> <size> "<_>" "<agent>"\` \| status != "200"` | Identify non-200 HTTP responses |
+| 4 | `{job="nginx-app", nomad_alloc_id="<allocation-id>"}` | Isolate logs from a specific allocation |
+| 5 | `sum by (status) (count_over_time({job="nginx-app"} \| pattern \`<ip> - <_> [<_>] "<method> <uri> <_>" <status> <size> "<_>" "<agent>"\` [5m]))` | Count requests grouped by HTTP status over five minutes |
+
+**Expected observations:**
+
+- Query 1 returns collected NGINX logs.
+- Query 2 filters requests containing `GET`.
+- Query 3 identifies unsuccessful responses, including the deliberate 404 requests.
+- Query 4 isolates logs from a particular Nomad allocation.
+- Query 5 provides a count of requests grouped by HTTP status.
+
+**Screenshot:** `docs/screenshots/grafana-explore.png`
+
+The screenshot should show the executed query and actual returned log entries.
+
+## 7. Troubleshooting
+
+| Problem | Cause | Resolution |
+|---|---|---|
+| Nomad allocation unhealthy: `dial tcp 172.22.0.4:8080: connection refused` | Nomad registered its container IP instead of the host-reachable address used by the host-networked application | Configured `address = "172.22.0.1"` in the Consul service registration |
+| `curl localhost:8080` failed inside the Consul container | `localhost` refers to the current container, not the application container or Docker host | Tested using the Docker network gateway `172.22.0.1:8080` |
+| GHCR image pull failed with IPv6 `network is unreachable` | WSL did not have a working IPv6 route to the registry | Used `force_pull = false` to reuse the locally cached image where appropriate |
+| Grafana returned no logs | Incorrect label selector, Promtail discovery issue, or missing test traffic | Verified Docker labels, Promtail logs, Loki readiness, and the selected Grafana time range |
+
+## 8. Component Lifecycle and Production Considerations
+
+Promtail reached end of life on March 2, 2026, and is no longer maintained. This project documents the Promtail-based implementation used for the assessment.
+
+For future production deployments, migrate log collection to **Grafana Alloy**, Grafana's supported telemetry collector.
+
+Official migration documentation:
+
+https://grafana.com/docs/alloy/latest/set-up/migrate/from-promtail/
+

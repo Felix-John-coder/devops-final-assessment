@@ -1,6 +1,6 @@
 # proxy/Dockerfile
 # NGINX reverse proxy that terminates TLS with a self-signed certificate.
-FROM nginx:1.27-alpine
+FROM nginx:1.30.6-alpine3.24-slim
 
 RUN apk add --no-cache openssl \
  && mkdir -p /etc/nginx/certs \
