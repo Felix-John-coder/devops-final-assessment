@@ -1,6 +1,8 @@
 # DevOps Intern Final Assessment
 
-[![CI Status](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml/badge.svg](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/ci.yaml)
+
+[![CI Status](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/Felix-John-coder/devops-final-assessment/actions/workflows/CI.yml)
+
 
 **Name:** Felix Aghedo  
 **Submission date:** 17 December 2026  
