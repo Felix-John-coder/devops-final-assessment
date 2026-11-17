@@ -1,4 +1,4 @@
-FROM nginx:stable-alpine
+FROM nginx:1.30.6-alpine3.24-slim
 
 # Copy source code
 RUN rm -rf /usr/share/nginx/html/*
