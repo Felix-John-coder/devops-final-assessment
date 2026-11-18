@@ -59,7 +59,10 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 ## Quick Start
 
 Clone the repository and start the supporting infrastructure:
+```
 `Note:` make sure your environment is runing git
+
+```
 ```bash
 git clone https://github.com/Felix-John-coder/devops-final-assessment.git
 cd devops-final-assessment
@@ -67,8 +70,9 @@ cd devops-final-assessment
 cd monitoring && docker compose up -d && cd ..
 
 SHA=sha-$(git rev-parse HEAD)
-echo $SHA
-docker pull ghcr.io/felix-john-coder/devops-final-assessment:$SHA  *or you can copy a particular commit sha- to rollback to*
+echo $SHA 
+<!-- you can copy a particular commit sha- to rollback to, then you will replace $SHA with the commit sha- (Tag) -->
+docker pull ghcr.io/felix-john-coder/devops-final-assessment:$SHA  
 
 docker exec -i nomad nomad job run -var="image_tag=$SHA"  - < nomad/nginx.nomad.hcl
 
