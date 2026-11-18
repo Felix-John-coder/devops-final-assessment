@@ -68,7 +68,7 @@ cd monitoring && docker compose up -d && cd ..
 
 docker pull ghcr.io/felix-john-coder/devops-final-assessment:latest
 
-docker exec -i nomad nomad job run  - < nomad/nginx-app.nomad.hcl
+docker exec -i nomad nomad job run  - < nomad/nginx.nomad.hcl
 
 docker build -t nginx-tls-proxy:local ./reverse-proxy
 
