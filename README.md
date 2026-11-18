@@ -284,8 +284,8 @@ curl -s http://localhost:8500/v1/health/checks/nginx-service
 
 ## TLS reverse proxy
 
-An additional NGINX TLS reverse proxy was configured under `reverse-proxy/`.
-
+**An additional NGINX TLS reverse proxy was configured under** `reverse-proxy/`.
+ as an Optional Extension.
 It terminates HTTPS on port `8443` and forwards application requests to port `8080`.
 
 **Build and deploy:**
