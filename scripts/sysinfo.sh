@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -euo pipefail
 echo "System Information"
 
 echo "Current User: $(id -un)"

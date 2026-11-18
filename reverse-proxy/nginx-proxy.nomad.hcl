@@ -37,6 +37,7 @@ job "nginx-proxy" {
 
       port "https" {
         static = 8443
+        to = 8080
       }
     }
 

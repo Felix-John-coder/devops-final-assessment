@@ -20,15 +20,15 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 ### Delivery pipeline
 
 
-![Delivery Pipeline](docs/pipeline.png)
+![Delivery Pipeline](docs/screenshots/pipeline.png)
 
 ### Runtime architecture
 
-![Runtime Architecture](docs/runtime.png)
+![Runtime Architecture](docs/screenshots/runtime.png)
 
 ### Consul health-check networking
 
-![Health Check Networking](docs/healthcheck-flow.png)
+![Health Check Networking](docs/screenshots/healthcheck-flow.png)
 
 | Component | Purpose |
 |---|---|
@@ -59,16 +59,18 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 ## Quick Start
 
 Clone the repository and start the supporting infrastructure:
-
+`Note:` make sure your environment is runing git
 ```bash
 git clone https://github.com/Felix-John-coder/devops-final-assessment.git
 cd devops-final-assessment
 
 cd monitoring && docker compose up -d && cd ..
 
-docker pull ghcr.io/felix-john-coder/devops-final-assessment:latest
+SHA=sha-$(git rev-parse HEAD)
+echo $SHA
+docker pull ghcr.io/felix-john-coder/devops-final-assessment:$SHA  *or you can copy a particular commit sha- to rollback to*
 
-docker exec -i nomad nomad job run  - < nomad/nginx.nomad.hcl
+docker exec -i nomad nomad job run -var="image_tag=$SHA"  - < nomad/nginx.nomad.hcl
 
 docker build -t nginx-tls-proxy:local ./reverse-proxy
 
@@ -94,7 +96,7 @@ feat: script updated/added
 feat: nomad infra added
 ci: ci workflow added
 fix: workflow fixed
-docs: docs/Readme updated
+docs: docs  Readme updated
 ```
 
 **Verify repository history and release:**
@@ -224,7 +226,7 @@ The publishing workflow uses `GITHUB_TOKEN` with restricted permissions and publ
 ghcr.io/felix-john-coder/devops-final-assessment
 ```
 
-![GitHub Actions CI Result](docs/ci-run.png)
+![GitHub Actions CI Result](docs/screenshots/ci-run.png)
 
 The CI status badge at the top of this README links to the workflow.
 
@@ -363,7 +365,7 @@ curl http://localhost:8080/does-not-exist
 
 This query extracts the HTTP status from NGINX access logs and filters unsuccessful responses.
 
-![Grafana Explore](docs/grafana-explore.png)
+![Grafana Explore](docs/screenshots/grafana-explore.png)
 
 Additional configuration, queries, observed results, and troubleshooting notes are documented in `monitoring/loki_setup.md`.
 

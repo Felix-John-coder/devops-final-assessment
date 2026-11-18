@@ -1,3 +1,7 @@
+variable "image_tag" {
+  type        = string
+  description = "Image tag to deploy a git SHA"
+}
 job "nginx-app" {
   datacenters = ["dc1"]
   type        = "service"
@@ -36,6 +40,7 @@ job "nginx-app" {
 
       port "http" {
         static = 8080
+        to = 8080
       }
     }
 
@@ -58,7 +63,7 @@ job "nginx-app" {
       driver = "docker"
 
       config {
-        image        = "ghcr.io/felix-john-coder/devops-final-assessment:latest"
+        image        = "ghcr.io/felix-john-coder/devops-final-assessment:${var.image_tag}"
         network_mode = "host"
         force_pull   = false
 
@@ -70,8 +75,8 @@ job "nginx-app" {
       }
 
       resources {
-        cpu    = 200
-        memory = 128
+        cpu    = 100
+        memory = 64
       }
     }
   }
