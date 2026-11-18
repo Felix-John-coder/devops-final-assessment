@@ -51,7 +51,7 @@ A developer pushes code to GitHub, triggering GitHub Actions to lint, build, tes
 | Docker | 29.2.1 |
 | Docker Compose | 5.0.2 |
 | Nomad | 2.1.1 |
-| Consul | [v1.21.5] |
+| Consul | v1.21.5 |
 
 
 ---
@@ -149,6 +149,7 @@ Implementation includes:
 - `BUILD_SHA` build argument exposed through the application response.
 - Final image designed to remain below 60 MB.
 
+<<<<<<< HEAD
 
  ### Deployment Reliability
 
@@ -167,6 +168,8 @@ docker build \
   -t devops-final:local \
   ./app
 ```
+=======
+>>>>>>> cdb3933e992c7512f1dcec5d00381e71d81a1de9
 
 **Inspect image size:**
 
@@ -373,8 +376,7 @@ Additional configuration, queries, observed results, and troubleshooting notes a
 
 | Failure | Cause and resolution |
 |---|---|
-| Consul returned `connection refused` for `172.22.0.4:8080` | The application used host networking. Configured the Consul service address to use the Docker gateway, `host.docker.internal`. |
-|`Host address via host.docker.internal`: Consul reaches the host through this name, which depends on the `extra_hosts` entry in the compose file. With more time I would run Consul and Nomad on the host or use Consul DNS, so no host address is needed.|
+| Consul returned `connection refused` for `172.22.0.4:8080` | The application used host networking. Configured the Consul service address to use the Docker gateway `host.docker.internal`. |
 | `localhost:8080` failed inside the Consul container | Container localhost refers to itself. Used the Docker gateway to reach the host application. |
 | Nomad failed to pull an image because IPv6 networking was unavailable | Set `force_pull = false` to reuse the image already available in the Docker daemon. |
 | Loki rejected old log entries with HTTP 400 | Old buffered entries were outside Loki's accepted timestamp window. Generated fresh requests and queried recent logs. |
@@ -384,7 +386,7 @@ Additional configuration, queries, observed results, and troubleshooting notes a
 ## Known Limitations
 
 - **Single-node environment:** Nomad and Consul do not have high availability. I would introduce multiple server and client nodes.
-- **Hardcoded Docker gateway:** The gateway address can change when the Docker network is recreated. I would use a more stable service-discovery and networking design.
+- **Host address via `host.docker.internal`:** Consul reaches the host through this name, which depends on the `extra_hosts` entry in the compose file. With more time I would run Consul and Nomad on the host or use Consul DNS, so no host address is needed.
 - **Self-signed TLS certificate:** Suitable for local assessment, not public production traffic. I would use a trusted CA and automated renewal.
 - **Default monitoring credentials:** Grafana and Loki require stronger authentication and access controls before production use.
 - **Manual deployment:** CI publishes the image, but deployment to Nomad is not fully automated. I would introduce an authenticated deployment stage with approval and rollback.

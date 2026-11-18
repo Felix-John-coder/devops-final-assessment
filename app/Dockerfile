@@ -2,9 +2,8 @@ FROM nginx:1.30.6-alpine3.24-slim
 
 # Copy source code
 RUN rm -rf /usr/share/nginx/html/*
-COPY ./ /usr/share/nginx/html
+COPY index.html /usr/share/nginx/html
 
-RUN apk update && apk upgrade --no-cache
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf 
 
