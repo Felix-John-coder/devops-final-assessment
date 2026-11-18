@@ -106,7 +106,7 @@ git tag --list
 ```
 
 
-Pull request: [Insert merged pull request URL]
+Pull request: [devops-final-assessment-closed-pull-request] https://github.com/Felix-John-coder/devops-final-assessment/pulls?q=is%3Apr+state%3Aclosed
 
 ---
 
@@ -149,7 +149,6 @@ Implementation includes:
 - `BUILD_SHA` build argument exposed through the application response.
 - Final image designed to remain below 60 MB.
 
-<<<<<<< HEAD
 
  ### Deployment Reliability
 
@@ -168,8 +167,6 @@ docker build \
   -t devops-final:local \
   ./app
 ```
-=======
->>>>>>> cdb3933e992c7512f1dcec5d00381e71d81a1de9
 
 **Inspect image size:**
 
