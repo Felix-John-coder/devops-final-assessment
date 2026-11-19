@@ -82,7 +82,12 @@ docker exec -i nomad nomad job run - < reverse-proxy/nginx-proxy.nomad.hcl
 
 curl -i http://localhost:8080/healthz
 curl -ik https://localhost:8443/healthz
+ 
+
 ```
+### picture of a successfull run of nomad container
+
+![nomad runing container](docs/screenshots/succesfull_run.png)
 
 Open Grafana at `http://localhost:3000` and navigate to **Explore → Loki** to query application logs.
 
