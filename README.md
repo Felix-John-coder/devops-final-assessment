@@ -87,7 +87,7 @@ curl -ik https://localhost:8443/healthz
 ```
 ### picture of a successfull run of nomad container
 
-![nomad runing container](docs/screenshots/succesfull_run.png)
+![nomad runing container on my local linux machine](docs/screenshots/succesfull_run.png)
 
 Open Grafana at `http://localhost:3000` and navigate to **Explore → Loki** to query application logs.
 
