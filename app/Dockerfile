@@ -10,6 +10,9 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 ARG BUILD_SHA=unknown
 
 
+RUN sed -i "s/BUILD_SHA_PLACEHOLDER/${BUILD_SHA}/g" \
+    /usr/share/nginx/html/index.html
+
 # Create a non-root user and grant access to required files
 RUN chown -R nginx:nginx /usr/share/nginx/html \
     /var/cache/nginx \
